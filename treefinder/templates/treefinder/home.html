@@ -1,0 +1,68 @@
+{% extends 'treefinder/base.html' %}
+{% load static %}
+
+{% block content %}
+<p>This is the homepage for FruitFinderTO. Here you can find information about fruit trees in your area.</p>
+
+<!-- Hidden div to store tree data -->
+<div id="treeData" data-trees="{{ trees|safe }}" style="display:none;"></div>
+
+<div id="mapid" style="height: 75vh;"></div>
+
+<script type="text/javascript">
+    // console.log('{{ trees|safe }}');  // Check the raw data format
+    // Parse the tree data
+    var treeData = JSON.parse('{{ trees|escapejs }}');
+
+    // Initialize the map
+    var mymap = L.map('mapid').setView([43.6415228, -79.4182776], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(mymap);
+
+    var markers = L.markerClusterGroup({
+        disableClusteringAtZoom: 17, // Disables clustering at zoom level 17 and beyond
+        maxClusterRadius: 120, // The maximum radius that a cluster will cover from the central marker (in pixels)
+        spiderfyOnMaxZoom: false, // Don't show spiderfied markers at the highest zoom level
+    });
+
+    // Load trees initially
+    loadVisibleTrees();
+
+    // Function to load trees within the current map bounds
+    function loadVisibleTrees() {
+        var bounds = mymap.getBounds();
+        var ne = bounds.getNorthEast(); // Northeast corner
+        var sw = bounds.getSouthWest(); // Southwest corner
+
+        // Construct the API URL with the current bounds
+        var apiUrl = `/api/trees?neLat=${ne.lat}&neLng=${ne.lng}&swLat=${sw.lat}&swLng=${sw.lng}`;
+
+        // Use fetch API to get the data
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(trees => {
+                // Clear existing markers
+                markers.clearLayers();
+
+                // Add new markers
+                trees.forEach(function (tree) {
+                    var marker = L.marker([tree.fields.latitude, tree.fields.longitude])
+                        .bindPopup(tree.fields.name);
+                    markers.addLayer(marker);
+                });
+
+                // Update the cluster group with the new markers
+                mymap.addLayer(markers);
+            });
+
+    }
+
+    // Set up event listeners for when the map stops moving or zooming
+    mymap.on('moveend', loadVisibleTrees);
+    mymap.on('zoomend', loadVisibleTrees);
+</script>
+
+<img src="{% static 'images/MulberryAdventure.png' %}" alt="Mulberry Adventure">
+{% endblock content %}
