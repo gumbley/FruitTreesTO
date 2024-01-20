@@ -7,6 +7,26 @@
 <!-- Hidden div to store tree data -->
 <div id="treeData" data-trees="{{ trees|safe }}" style="display:none;"></div>
 
+<form id="searchForm">
+    <label for="name">Choose a fruit type:</label>
+    <select name="name" id="name">
+        <option value="all">All</option>
+        <option value="Apple">Apple</option>
+        <option value="Cherry">Cherry</option>
+        <option value="Mulberry">Mulberry</option>
+        <option value="Peach">Peach</option>
+        <option value="Pear">Pear</option>
+        <option value="Plum">Plum</option>
+        <option value="Serviceberry">Serviceberry</option>
+    </select>
+    <label for="inSeason">
+        <input type="checkbox" id="inSeason" name="inSeason">
+        In Season
+    </label>
+    <button type="button" onclick="loadVisibleTrees()">Search</button>
+</form>
+
+
 <div id="mapid" style="height: 75vh;"></div>
 
 <script type="text/javascript">
@@ -35,28 +55,22 @@
         var bounds = mymap.getBounds();
         var ne = bounds.getNorthEast(); // Northeast corner
         var sw = bounds.getSouthWest(); // Southwest corner
+        var name = document.getElementById('name').value;
+        var inSeason = document.getElementById('inSeason').checked;
 
-        // Construct the API URL with the current bounds
-        var apiUrl = `/api/trees?neLat=${ne.lat}&neLng=${ne.lng}&swLat=${sw.lat}&swLng=${sw.lng}`;
+        var apiUrl = `/api/trees?neLat=${ne.lat}&neLng=${ne.lng}&swLat=${sw.lat}&swLng=${sw.lng}&name=${name}&inSeason=${inSeason}`;
 
-        // Use fetch API to get the data
         fetch(apiUrl)
             .then(response => response.json())
-            .then(trees => {
-                // Clear existing markers
+            .then(data => {
                 markers.clearLayers();
-
-                // Add new markers
-                trees.forEach(function (tree) {
+                data.forEach(function (tree) {
                     var marker = L.marker([tree.fields.latitude, tree.fields.longitude])
                         .bindPopup(tree.fields.name);
                     markers.addLayer(marker);
                 });
-
-                // Update the cluster group with the new markers
                 mymap.addLayer(markers);
             });
-
     }
 
     // Set up event listeners for when the map stops moving or zooming
