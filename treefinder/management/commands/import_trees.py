@@ -34,7 +34,7 @@ class Command(BaseCommand):
     def handle_row(self, row):
         try:
             geometry_str = row['geometry']
-            coordinates_str = geometry_str.replace("{u'type': u'Point', u'coordinates': (", "").replace(")}", "")
+            coordinates_str = geometry_str.replace("{'type': 'MultiPoint', 'coordinates': [[", "").replace("]]}", "")
             longitude, latitude = [float(coord) for coord in coordinates_str.split(', ')]
 
             # Use json.dumps to escape the string properly
