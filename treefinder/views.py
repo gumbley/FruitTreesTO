@@ -40,7 +40,7 @@ def get_trees_within_bounds(request):
     
     if in_season:
         today = datetime.now().timetuple().tm_yday
-        trees = trees.filter(fruiting_start_date__lte=today, fruiting_end_date__gte=today)
+        trees = trees.filter(fruiting_start_day__lte=today, fruiting_end_day__gte=today)
 
     trees_data = serialize('json', trees)
     trees_list = json.loads(trees_data)
