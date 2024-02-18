@@ -4,9 +4,6 @@
 {% block content %}
 <p>This is the homepage for FruitFinderTO. Here you can find information about fruit trees in your area.</p>
 
-<!-- Hidden div to store tree data -->
-<div id="treeData" data-trees="{{ trees|safe }}" style="display:none;"></div>
-
 <form id="searchForm">
     <label for="name">Choose a fruit type:</label>
     <select name="name" id="name">
@@ -23,59 +20,98 @@
         <input type="checkbox" id="inSeason" name="inSeason">
         In Season
     </label>
-    <button type="button" onclick="loadVisibleTrees()">Search</button>
 </form>
 
 
 <div id="mapid" style="height: 75vh;"></div>
 
 <script type="text/javascript">
-    // console.log('{{ trees|safe }}');  // Check the raw data format
-    // Parse the tree data
-    var treeData = JSON.parse('{{ trees|escapejs }}');
 
-    // Initialize the map
-    var mymap = L.map('mapid').setView([43.6415228, -79.4182776], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(mymap);
+    var geocodedAddressLat, geocodedAddressLng;
 
-    var markers = L.markerClusterGroup({
-        disableClusteringAtZoom: 17, // Disables clustering at zoom level 17 and beyond
-        maxClusterRadius: 120, // The maximum radius that a cluster will cover from the central marker (in pixels)
-        spiderfyOnMaxZoom: false, // Don't show spiderfied markers at the highest zoom level
-    });
+    document.addEventListener('DOMContentLoaded', function () {
 
-    // Load trees initially
-    loadVisibleTrees();
+        // Initialize the map
+        var mymap = L.map('mapid').setView([43.6415228, -79.4182776], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(mymap);
 
-    // Function to load trees within the current map bounds
-    function loadVisibleTrees() {
-        var bounds = mymap.getBounds();
-        var ne = bounds.getNorthEast(); // Northeast corner
-        var sw = bounds.getSouthWest(); // Southwest corner
-        var name = document.getElementById('name').value;
-        var inSeason = document.getElementById('inSeason').checked;
+        var markers = L.markerClusterGroup({
+            disableClusteringAtZoom: 17, // Disables clustering at zoom level 17 and beyond
+            maxClusterRadius: 120, // The maximum radius that a cluster will cover from the central marker (in pixels)
+            spiderfyOnMaxZoom: false, // Don't show spiderfied markers at the highest zoom level
+        });
 
-        var apiUrl = `/api/trees?neLat=${ne.lat}&neLng=${ne.lng}&swLat=${sw.lat}&swLng=${sw.lng}&name=${name}&inSeason=${inSeason}`;
+        // Function to initiate routing
+        function routeToTree(treeLatLng) {
+            var startLatLng = L.latLng(geocodedAddressLat, geocodedAddressLng); // Ensure these are updated with the geocoded address
+            L.Routing.control({
+                waypoints: [startLatLng, treeLatLng],
+                routeWhileDragging: true,
+                geocoder: L.Control.Geocoder.nominatim()
+            }).addTo(mymap);
+        }
 
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-                markers.clearLayers();
-                data.forEach(function (tree) {
-                    var marker = L.marker([tree.fields.latitude, tree.fields.longitude])
-                        .bindPopup(tree.fields.name);
-                    markers.addLayer(marker);
+        // Load trees initially
+        loadVisibleTrees();
+
+        // Function to load trees within the current map bounds
+        function loadVisibleTrees() {
+            var bounds = mymap.getBounds();
+            var ne = bounds.getNorthEast(); // Northeast corner
+            var sw = bounds.getSouthWest(); // Southwest corner
+            var name = document.getElementById('name').value;
+            var inSeason = document.getElementById('inSeason').checked;
+
+            var apiUrl = `/api/trees?neLat=${ne.lat}&neLng=${ne.lng}&swLat=${sw.lat}&swLng=${sw.lng}&name=${name}&inSeason=${inSeason}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    markers.clearLayers();
+                    data.forEach(function (tree) {
+                        var marker = L.marker([tree.fields.latitude, tree.fields.longitude])
+                            .bindPopup(tree.fields.name)
+                            .on('click', function () {
+                                routeToTree(this.getLatLng());
+                            });
+                        markers.addLayer(marker);
+                    });
+                    mymap.addLayer(markers);
                 });
-                mymap.addLayer(markers);
-            });
-    }
+        }
 
-    // Set up event listeners for when the map stops moving or zooming
-    mymap.on('moveend', loadVisibleTrees);
-    mymap.on('zoomend', loadVisibleTrees);
+        // Attach event listener to the select dropdown
+        document.getElementById('name').addEventListener('change', loadVisibleTrees);
+
+        // Attach event listener to the checkbox
+        document.getElementById('inSeason').addEventListener('change', loadVisibleTrees);
+
+        // Add geocoder
+        var geocoder = L.Control.geocoder({
+            defaultMarkGeocode: false
+        })
+            .on('markgeocode', function (e) {
+                var bbox = e.geocode.bbox;
+                geocodedAddressLat = e.geocode.center.lat;
+                geocodedAddressLng = e.geocode.center.lng;
+                var poly = L.polygon([
+                    bbox.getSouthEast(),
+                    bbox.getNorthEast(),
+                    bbox.getNorthWest(),
+                    bbox.getSouthWest()
+                ]).addTo(mymap);
+                mymap.fitBounds(poly.getBounds());
+            })
+            .addTo(mymap);
+
+        // Set up event listeners for when the map stops moving or zooming
+        mymap.on('moveend', loadVisibleTrees);
+        mymap.on('zoomend', loadVisibleTrees);
+
+    });
 </script>
 
 <img src="{% static 'images/MulberryAdventure.png' %}" alt="Mulberry Adventure">

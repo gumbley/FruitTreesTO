@@ -127,6 +127,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+fruitfinderto-env/
 
 # Spyder project settings
 .spyderproject
