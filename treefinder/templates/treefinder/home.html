@@ -44,16 +44,6 @@
             spiderfyOnMaxZoom: false, // Don't show spiderfied markers at the highest zoom level
         });
 
-        // Function to initiate routing
-        function routeToTree(treeLatLng) {
-            var startLatLng = L.latLng(geocodedAddressLat, geocodedAddressLng); // Ensure these are updated with the geocoded address
-            L.Routing.control({
-                waypoints: [startLatLng, treeLatLng],
-                routeWhileDragging: true,
-                geocoder: L.Control.Geocoder.nominatim()
-            }).addTo(mymap);
-        }
-
         // Load trees initially
         loadVisibleTrees();
 
@@ -74,9 +64,6 @@
                     data.forEach(function (tree) {
                         var marker = L.marker([tree.fields.latitude, tree.fields.longitude])
                             .bindPopup(tree.fields.name)
-                            .on('click', function () {
-                                routeToTree(this.getLatLng());
-                            });
                         markers.addLayer(marker);
                     });
                     mymap.addLayer(markers);
