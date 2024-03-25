@@ -16,10 +16,10 @@
         <option value="Plum">Plum</option>
         <option value="Serviceberry">Serviceberry</option>
     </select>
-    <label for="inSeason">
-        <input type="checkbox" id="inSeason" name="inSeason">
-        In Season
-    </label>
+    <label for="seasonSlider">Select Date:</label>
+    <input type="range" id="seasonSlider" name="seasonSlider" min="1" max="365">
+    <p>Current Date: <span id="dateDisplay"></span></p>
+
 </form>
 
 
@@ -44,8 +44,29 @@
             spiderfyOnMaxZoom: false, // Don't show spiderfied markers at the highest zoom level
         });
 
-        // Load trees initially
-        loadVisibleTrees();
+        var today = new Date();
+        var start = new Date(today.getFullYear(), 0, 0);
+        var diff = today - start;
+        var oneDay = 1000 * 60 * 60 * 24;
+        var dayOfYear = Math.floor(diff / oneDay);
+
+        document.getElementById('seasonSlider').value = dayOfYear;
+        updateDateDisplay(dayOfYear); // Function to update date display below slider
+
+        document.getElementById('seasonSlider').addEventListener('input', function (e) {
+            loadVisibleTrees(); // Adjust to filter based on the slider's value
+            updateDateDisplay(e.target.value);
+        });
+
+        function updateDateDisplay(dayOfYear) {
+            // Convert day of the year back to a date
+            var date = new Date(new Date().getFullYear(), 0); // Start at Jan 1 this year
+            date.setDate(dayOfYear);
+            document.getElementById('dateDisplay').innerText = date.toLocaleDateString();
+        }
+
+        // Load trees initially Is this necessary?
+        //  loadVisibleTrees();
 
         // Function to load trees within the current map bounds
         function loadVisibleTrees() {
@@ -53,9 +74,9 @@
             var ne = bounds.getNorthEast(); // Northeast corner
             var sw = bounds.getSouthWest(); // Southwest corner
             var name = document.getElementById('name').value;
-            var inSeason = document.getElementById('inSeason').checked;
+            var dayOfYear = document.getElementById('seasonSlider').value; // Fetch the day of year from the slider
 
-            var apiUrl = `/api/trees?neLat=${ne.lat}&neLng=${ne.lng}&swLat=${sw.lat}&swLng=${sw.lng}&name=${name}&inSeason=${inSeason}`;
+            var apiUrl = `/api/trees?neLat=${ne.lat}&neLng=${ne.lng}&swLat=${sw.lat}&swLng=${sw.lng}&name=${name}&dayOfYear=${dayOfYear}`;
 
             fetch(apiUrl)
                 .then(response => response.json())
