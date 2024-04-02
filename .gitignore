@@ -167,3 +167,6 @@ fruitfinderto-env/Scripts/pip.exe
 fruitfinderto-env/Scripts/pip3.12.exe
 fruitfinderto-env/Scripts/pip3.exe
 fruitfinderto-env/Scripts/sqlformat.exe
+
+# vscode
+.vscode/
