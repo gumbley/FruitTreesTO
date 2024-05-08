@@ -94,25 +94,38 @@
         // Attach event listener to the select dropdown
         document.getElementById('name').addEventListener('change', loadVisibleTrees);
 
-        // Attach event listener to the checkbox
-        document.getElementById('inSeason').addEventListener('change', loadVisibleTrees);
-
         // Add geocoder
         var geocoder = L.Control.geocoder({
-            defaultMarkGeocode: false
+            defaultMarkGeocode: false,
+            placeholder: "Search for an address...", // Placeholder text for the input
+            collapsed: false, // Ensures that the search bar is always open
+            position: 'topright', // Position of the search bar on the map
+            geocoder: new L.Control.Geocoder.Nominatim() // Using Nominatim geocoder by default
+        }).on('markgeocode', function (e) {
+            var bbox = e.geocode.bbox;
+            var center = e.geocode.center;
+            geocodedAddressLat = center.lat;
+            geocodedAddressLng = center.lng;
+
+            // Clear existing markers if necessary
+            if (currentMarker) {
+                mymap.removeLayer(currentMarker);
+            }
+
+            // Add a marker at the geocode result center and open a popup
+            var currentMarker = L.marker(center).addTo(mymap)
+                .bindPopup(e.geocode.name)
+                .openPopup();
+
+            // Continue with your existing functionality to draw a polygon and fit the map bounds
+            var poly = L.polygon([
+                bbox.getSouthEast(),
+                bbox.getNorthEast(),
+                bbox.getNorthWest(),
+                bbox.getSouthWest()
+            ]).addTo(mymap);
+            mymap.fitBounds(poly.getBounds());
         })
-            .on('markgeocode', function (e) {
-                var bbox = e.geocode.bbox;
-                geocodedAddressLat = e.geocode.center.lat;
-                geocodedAddressLng = e.geocode.center.lng;
-                var poly = L.polygon([
-                    bbox.getSouthEast(),
-                    bbox.getNorthEast(),
-                    bbox.getNorthWest(),
-                    bbox.getSouthWest()
-                ]).addTo(mymap);
-                mymap.fitBounds(poly.getBounds());
-            })
             .addTo(mymap);
 
         // Set up event listeners for when the map stops moving or zooming
