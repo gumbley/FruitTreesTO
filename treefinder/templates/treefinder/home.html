@@ -19,29 +19,32 @@
     <label for="seasonSlider">Select Date:</label>
     <input type="range" id="seasonSlider" name="seasonSlider" min="1" max="365">
     <p>Current Date: <span id="dateDisplay"></span></p>
-
 </form>
-
 
 <div id="mapid" style="height: 75vh;"></div>
 
 <script type="text/javascript">
-
-    var geocodedAddressLat, geocodedAddressLng;
-
     document.addEventListener('DOMContentLoaded', function () {
-
-        // Initialize the map
         var mymap = L.map('mapid').setView([43.6415228, -79.4182776], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap contributors'
         }).addTo(mymap);
 
+        // Define bounding box coordinates for Toronto
+        const TORONTO_BOUNDS = [
+            [43.855457, -79.639319], // Northwest corner
+            [43.581024, -79.116897]  // Southeast corner
+        ];
+
+        // Create a LatLngBounds object for the bounds and set map boundaries
+        const torontoBounds = L.latLngBounds(TORONTO_BOUNDS);
+        mymap.setMaxBounds(torontoBounds);  // Limit the map to Toronto   
+
         var markers = L.markerClusterGroup({
-            disableClusteringAtZoom: 17, // Disables clustering at zoom level 17 and beyond
-            maxClusterRadius: 120, // The maximum radius that a cluster will cover from the central marker (in pixels)
-            spiderfyOnMaxZoom: false, // Don't show spiderfied markers at the highest zoom level
+            disableClusteringAtZoom: 17,
+            maxClusterRadius: 120,
+            spiderfyOnMaxZoom: false,
         });
 
         var today = new Date();
@@ -59,65 +62,60 @@
         });
 
         function updateDateDisplay(dayOfYear) {
-            // Convert day of the year back to a date
-            var date = new Date(new Date().getFullYear(), 0); // Start at Jan 1 this year
+            var date = new Date(new Date().getFullYear(), 0);
             date.setDate(dayOfYear);
             document.getElementById('dateDisplay').innerText = date.toLocaleDateString();
         }
 
-        // Load trees initially Is this necessary?
-        //  loadVisibleTrees();
-
-        // Function to load trees within the current map bounds
         function loadVisibleTrees() {
             var bounds = mymap.getBounds();
-            var ne = bounds.getNorthEast(); // Northeast corner
-            var sw = bounds.getSouthWest(); // Southwest corner
+            var ne = bounds.getNorthEast();
+            var sw = bounds.getSouthWest();
             var name = document.getElementById('name').value;
-            var dayOfYear = document.getElementById('seasonSlider').value; // Fetch the day of year from the slider
+            var dayOfYear = document.getElementById('seasonSlider').value;
 
-            var apiUrl = `/api/trees?neLat=${ne.lat}&neLng=${ne.lng}&swLat=${sw.lat}&swLng=${sw.lng}&name=${name}&dayOfYear=${dayOfYear}`;
-
-            fetch(apiUrl)
+            fetch("{% static 'data/tree_data.json' %}")
                 .then(response => response.json())
                 .then(data => {
                     markers.clearLayers();
                     data.forEach(function (tree) {
-                        var marker = L.marker([tree.fields.latitude, tree.fields.longitude])
-                            .bindPopup(tree.fields.name)
-                        markers.addLayer(marker);
+                        if (
+                            tree.latitude <= ne.lat && tree.latitude >= sw.lat &&
+                            tree.longitude <= ne.lng && tree.longitude >= sw.lng &&
+                            (name === 'all' || tree.name === name) &&
+                            (dayOfYear >= tree.fruiting_start_day && dayOfYear <= tree.fruiting_end_day)
+                        ) {
+                            var popupContent = `
+                                <strong>${tree.name}</strong><br>
+                                Address: ${tree.address}<br>
+                                Fruiting Start Day: ${tree.fruiting_start_day}<br>
+                                Fruiting End Day: ${tree.fruiting_end_day}
+                            `;
+                            var marker = L.marker([tree.latitude, tree.longitude])
+                                .bindPopup(popupContent);
+                            markers.addLayer(marker);
+                        }
                     });
                     mymap.addLayer(markers);
                 });
         }
 
-        // Attach event listener to the select dropdown
         document.getElementById('name').addEventListener('change', loadVisibleTrees);
 
-        // Add geocoder
         var geocoder = L.Control.geocoder({
             defaultMarkGeocode: false,
-            placeholder: "Search for an address...", // Placeholder text for the input
-            collapsed: false, // Ensures that the search bar is always open
-            position: 'topright', // Position of the search bar on the map
-            geocoder: new L.Control.Geocoder.Nominatim() // Using Nominatim geocoder by default
+            placeholder: "Search for an address...",
+            collapsed: false,
+            position: 'topright',
+            geocoder: new L.Control.Geocoder.Nominatim()
         }).on('markgeocode', function (e) {
             var bbox = e.geocode.bbox;
             var center = e.geocode.center;
-            geocodedAddressLat = center.lat;
-            geocodedAddressLng = center.lng;
 
-            // Clear existing markers if necessary
-            if (currentMarker) {
-                mymap.removeLayer(currentMarker);
-            }
-
-            // Add a marker at the geocode result center and open a popup
             var currentMarker = L.marker(center).addTo(mymap)
                 .bindPopup(e.geocode.name)
                 .openPopup();
 
-            // Continue with your existing functionality to draw a polygon and fit the map bounds
             var poly = L.polygon([
                 bbox.getSouthEast(),
                 bbox.getNorthEast(),
@@ -125,13 +123,10 @@
                 bbox.getSouthWest()
             ]).addTo(mymap);
             mymap.fitBounds(poly.getBounds());
-        })
-            .addTo(mymap);
+        }).addTo(mymap);
 
-        // Set up event listeners for when the map stops moving or zooming
         mymap.on('moveend', loadVisibleTrees);
         mymap.on('zoomend', loadVisibleTrees);
-
     });
 </script>
 
