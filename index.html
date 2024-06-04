@@ -37,7 +37,8 @@
         <!-- Navigation links can go here -->
     </nav>
 
-    <p>This is the homepage for FruitFinderTO. Here you can find information about fruit trees in your area.</p>
+    <p>A map of fruit trees in Toronto. Search your address to find trees near you. Filter by fruit type. Change the
+        date to see when fruit will be in season.</p>
 
     <form id="searchForm">
         <label for="name">Choose a fruit type:</label>
@@ -160,6 +161,8 @@
 
             mymap.on('moveend', loadVisibleTrees);
             mymap.on('zoomend', loadVisibleTrees);
+
+            loadVisibleTrees();
         });
     </script>
 
