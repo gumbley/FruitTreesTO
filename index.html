@@ -138,8 +138,14 @@
                                     <strong>${tree.name}</strong><br>
                                     Address: ${tree.address}
                                 `;
-                                var marker = L.marker([tree.latitude, tree.longitude])
-                                    .bindPopup(popupContent);
+                                var markerColor = getColorForTreeType(tree.name);
+                                var marker = L.marker([tree.latitude, tree.longitude], {
+                                    radius: 8,
+                                    fillColor: markerColor,
+                                    weight: 1,
+                                    opacity: 1,
+                                    fillOpacity: 0.8
+                                }).bindPopup(popupContent);
                                 markers.addLayer(marker);
                             }
                         });
