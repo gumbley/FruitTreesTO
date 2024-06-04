@@ -1,3 +1,5 @@
+/* style.css */
+
 img {
     max-width: 100%;
     height: auto;
@@ -6,32 +8,22 @@ img {
     margin-right: auto;
 }
 
-/* Styles for Leaflet popups to ensure they are larger on mobile */
-.leaflet-popup-content-wrapper {
-    max-width: 300px !important;
-    /* Increase max-width for better readability */
-}
-
-@media (max-width: 600px) {
+/* Add the following media query to target mobile devices */
+@media (max-width: 768px) {
     .leaflet-popup-content-wrapper {
-        max-width: 90% !important;
-        /* Make popups wider on small screens */
+        font-size: 1.2em;
+        /* Increase font size */
+        padding: 10px;
+        /* Add padding for better readability */
     }
 
     .leaflet-popup-content {
         font-size: 1.2em;
-        /* Increase font size for readability */
+        /* Increase font size */
     }
 
     .leaflet-popup-tip-container {
         display: none;
-        /* Hide the popup arrow */
-    }
-
-    .leaflet-popup-close-button {
-        font-size: 1.5em;
-        /* Increase the size of the close button */
-        top: 10px;
-        right: 10px;
+        /* Hide the popup tip for better appearance on mobile */
     }
 }
