@@ -103,6 +103,19 @@
                 document.getElementById('dateDisplay').innerText = date.toLocaleDateString();
             }
 
+            function getColorForTreeType(treeType) {
+                switch (treeType) {
+                    case 'Apple': return '#FF0000'; // Tomato color
+                    case 'Cherry': return '#FF69B4'; // Hot pink
+                    case 'Mulberry': return '#8A2BE2'; // Blue violet
+                    case 'Peach': return '#FF9966'; // Gold
+                    case 'Pear': return '#ADFF2F'; // Green yellow
+                    case 'Plum': return '#6A5ACD'; // Slate blue
+                    case 'Serviceberry': return '#993333'; // Lime green
+                    default: return '#808080'; // Gray
+                }
+            }
+
             function loadVisibleTrees() {
                 var bounds = mymap.getBounds();
                 var ne = bounds.getNorthEast();
