@@ -3,6 +3,7 @@
 
 <head>
     <title>FruitFinderTO - Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
 
     <!-- Leaflet CSS -->
@@ -135,8 +136,7 @@
                                 (dayOfYear >= tree.fruiting_start_day && dayOfYear <= tree.fruiting_end_day)
                             ) {
                                 var popupContent = `
-                                    <strong>${tree.name}</strong><br>
-                                    <strong>${tree.sub_name}</strong><br>
+                                    <strong>${tree.name} ${tree.sub_name}</strong><br>
                                     Address: ${tree.address}
                                 `;
                                 var markerColor = getColorForTreeType(tree.name);
@@ -189,9 +189,12 @@
     <img src="MulberryAdventure.png" alt="Mulberry Adventure">
 
     <p>A site to find fruit trees in Toronto based on the Street Tree Data provided by the City of Toronto:
-        https://open.toronto.ca/dataset/street-tree-data/</p>
+        <a href="https://open.toronto.ca/dataset/street-tree-data/"
+            target="_blank">https://open.toronto.ca/dataset/street-tree-data/</a>
+    </p>
 
-    <p>Inspired by: https://www.mapto.ca/maps/the-fruit-trees-of-toronto</p>
+    <p>Inspired by: <a href="https://www.mapto.ca/maps/the-fruit-trees-of-toronto/"
+            target="_blank">https://www.mapto.ca/maps/the-fruit-trees-of-toronto/</a></p>
 
     <p>Mulberries are delicious.</p>
 </body>
