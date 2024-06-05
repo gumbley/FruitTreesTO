@@ -89,3 +89,19 @@ input[type="search"] {
     z-index: 1000;
     /* Ensure it's above other elements */
 }
+
+.date-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#inSeason {
+    margin-left: 5px;
+}
+
+#inSeason+label {
+    display: inline-block;
+    margin-left: 5px;
+    vertical-align: middle;
+}

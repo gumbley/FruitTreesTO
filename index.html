@@ -60,9 +60,13 @@
             <option value="Plum">Plum</option>
             <option value="Serviceberry">Serviceberry</option>
         </select>
-        <label for="seasonSlider">Select Date:</label>
-        <input type="range" id="seasonSlider" name="seasonSlider" min="1" max="365">
-        <p>Current Date: <span id="dateDisplay"></span></p>
+        <div class="date-filter-container">
+            <label for="seasonSlider">Select Date:</label>
+            <input type="range" id="seasonSlider" name="seasonSlider" min="1" max="365">
+            <p>Current Date: <span id="dateDisplay"></span></p>
+            <label for="inSeason">In season:</label>
+            <input type="checkbox" id="inSeason" name="inSeason" checked>
+        </div>
     </form>
 
     <div id="mapid" style="height: 75vh;"></div>
@@ -142,6 +146,7 @@
                 var sw = bounds.getSouthWest();
                 var name = document.getElementById('name').value;
                 var dayOfYear = document.getElementById('seasonSlider').value;
+                var inSeason = document.getElementById('inSeason').checked;
 
                 fetch("tree_data.json")
                     .then(response => response.json())
@@ -152,7 +157,7 @@
                                 tree.latitude <= ne.lat && tree.latitude >= sw.lat &&
                                 tree.longitude <= ne.lng && tree.longitude >= sw.lng &&
                                 (name === 'all' || tree.name === name) &&
-                                (dayOfYear >= tree.fruiting_start_day && dayOfYear <= tree.fruiting_end_day)
+                                (!inSeason || (dayOfYear >= tree.fruiting_start_day && dayOfYear <= tree.fruiting_end_day))
                             ) {
                                 var popupContent = `
                                     <strong>${tree.name} ${tree.sub_name}</strong><br>
@@ -174,6 +179,7 @@
             }
 
             document.getElementById('name').addEventListener('change', loadVisibleTrees);
+            document.getElementById('inSeason').addEventListener('change', loadVisibleTrees);
 
             var geocoder = L.Control.geocoder({
                 defaultMarkGeocode: false,
