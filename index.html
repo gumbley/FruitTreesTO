@@ -18,6 +18,10 @@
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.0/MarkerCluster.css" />
 
+    <!-- Leaflet Fullscreen Plugin CSS -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.5/Control.FullScreen.css" />
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" defer></script>
 
@@ -27,6 +31,9 @@
     <!-- Leaflet.markercluster JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.0/leaflet.markercluster-src.js"
         defer></script>
+
+    <!-- Leaflet Fullscreen Plugin JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.5/Control.FullScreen.js" defer></script>
 </head>
 
 <body>
@@ -67,6 +74,18 @@
                 maxZoom: 19,
                 attribution: '© OpenStreetMap contributors'
             }).addTo(mymap);
+
+            // Add fullscreen control
+            L.control.fullscreen().addTo(mymap);
+
+            // Optional: Adjust map size on fullscreen change
+            mymap.on('enterFullscreen', function () {
+                console.log('entered fullscreen');
+            });
+
+            mymap.on('exitFullscreen', function () {
+                console.log('exited fullscreen');
+            });
 
             // Define bounding box coordinates for Toronto
             const TORONTO_BOUNDS = [

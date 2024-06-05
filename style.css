@@ -10,6 +10,16 @@ img {
 
 /* Add the following media query to target mobile devices */
 @media (max-width: 768px) {
+    .leaflet-control-geocoder {
+        margin-top: 60px;
+        /* Increase margin to move the search bar down */
+    }
+
+    .leaflet-control-zoom {
+        margin-top: 120px;
+        /* Increase margin to move the zoom buttons down */
+    }
+
     .leaflet-popup-content-wrapper {
         font-size: 1.2em;
         /* Increase font size */
@@ -58,4 +68,24 @@ img {
         max-width: 100%;
         height: auto;
     }
+}
+
+/* Preventing zoom on input focus in mobile devices */
+input[type="text"],
+input[type="search"] {
+    font-size: 16px;
+    /* Set font-size to 16px to prevent zoom on focus */
+}
+
+/* General styles for search bar and zoom buttons positioning */
+.leaflet-control-geocoder {
+    position: relative;
+    z-index: 1001;
+    /* Ensure it's above other elements */
+}
+
+.leaflet-control-zoom {
+    position: relative;
+    z-index: 1000;
+    /* Ensure it's above other elements */
 }
