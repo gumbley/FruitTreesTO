@@ -34,6 +34,26 @@
 
     <!-- Leaflet Fullscreen Plugin JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.5/Control.FullScreen.js" defer></script>
+    <style>
+        #searchForm {
+            margin-bottom: 10px;
+        }
+
+        .date-filter-container {
+            display: none;
+            align-items: center;
+            margin-bottom: -10px;
+            margin-top: -10px;
+        }
+
+        .date-filter-container.flex {
+            display: flex;
+        }
+
+        #dateDisplay {
+            margin-left: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -45,8 +65,8 @@
         <!-- Navigation links can go here -->
     </nav>
 
-    <p>A map of fruit trees in Toronto. Search your address to find trees near you. Filter by fruit type. Change the
-        date to see when fruit will be in season.</p>
+    <p>A map of fruit trees in Toronto. Filter by fruits in season or by type. Search your address to find trees near
+        you.</p>
 
     <form id="searchForm">
         <label for="name">Choose a fruit type:</label>
@@ -61,10 +81,10 @@
             <option value="Plum">Plum</option>
             <option value="Serviceberry">Serviceberry</option>
         </select>
-        <div class="date-filter-container">
+        <div id="dateContainer" class="date-filter-container">
             <label for="seasonSlider">Select Date:</label>
             <input type="range" id="seasonSlider" name="seasonSlider" min="1" max="365">
-            <p>Current Date: <span id="dateDisplay"></span></p>
+            <p id="dateDisplay">Current Date: <span></span></p>
         </div>
     </form>
 
@@ -115,8 +135,10 @@
             // Set default selection based on date
             if (dayOfYear >= 152 && dayOfYear <= 320) {
                 document.getElementById('name').value = 'inSeason';
+                document.getElementById('dateContainer').classList.add('flex');
             } else {
                 document.getElementById('name').value = 'all';
+                document.getElementById('dateContainer').classList.remove('flex');
             }
 
             document.getElementById('seasonSlider').value = dayOfYear;
@@ -130,7 +152,7 @@
             function updateDateDisplay(dayOfYear) {
                 var date = new Date(new Date().getFullYear(), 0);
                 date.setDate(dayOfYear);
-                document.getElementById('dateDisplay').innerText = date.toLocaleDateString();
+                document.getElementById('dateDisplay').querySelector('span').innerText = date.toLocaleDateString();
             }
 
             function getColorForTreeType(treeType) {
@@ -182,7 +204,15 @@
                     });
             }
 
-            document.getElementById('name').addEventListener('change', loadVisibleTrees);
+            document.getElementById('name').addEventListener('change', function () {
+                var name = document.getElementById('name').value;
+                if (name === 'inSeason') {
+                    document.getElementById('dateContainer').classList.add('flex');
+                } else {
+                    document.getElementById('dateContainer').classList.remove('flex');
+                }
+                loadVisibleTrees();
+            });
             document.getElementById('seasonSlider').addEventListener('change', loadVisibleTrees);
 
             var geocoder = L.Control.geocoder({
@@ -223,7 +253,8 @@
     </p>
 
     <p>Inspired by: <a href="https://www.mapto.ca/maps/the-fruit-trees-of-toronto/"
-            target="_blank">https://www.mapto.ca/maps/the-fruit-trees-of-toronto/</a></p>
+            target="_blank">https://www.mapto.ca/maps/the-fruit-trees-of-toronto/</a> and <a
+            href="https://notfarfromthetree.org/" target="_blank">https://notfarfromthetree.org/</a></p>
 
     <p>Mulberries are delicious.</p>
 </body>
