@@ -22,6 +22,12 @@
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.5/Control.FullScreen.css" />
 
+    <!-- Leaflet Locate Control CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+
+    <!-- FontAwesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" defer></script>
 
@@ -34,6 +40,10 @@
 
     <!-- Leaflet Fullscreen Plugin JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.5/Control.FullScreen.js" defer></script>
+
+    <!-- Leaflet Locate Control JS -->
+    <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js" defer></script>
+
     <style>
         #searchForm {
             margin-bottom: 10px;
@@ -101,14 +111,11 @@
             // Add fullscreen control
             L.control.fullscreen().addTo(mymap);
 
-            // Optional: Adjust map size on fullscreen change
-            mymap.on('enterFullscreen', function () {
-                console.log('entered fullscreen');
-            });
-
-            mymap.on('exitFullscreen', function () {
-                console.log('exited fullscreen');
-            });
+            // Add locate control
+            L.control.locate({
+                flyTo: true,
+                keepCurrentZoomLevel: true,
+            }).addTo(mymap);
 
             // Define bounding box coordinates for Toronto
             const TORONTO_BOUNDS = [
@@ -118,7 +125,7 @@
 
             // Create a LatLngBounds object for the bounds and set map boundaries
             const torontoBounds = L.latLngBounds(TORONTO_BOUNDS);
-            mymap.setMaxBounds(torontoBounds);  // Limit the map to Toronto   
+            mymap.setMaxBounds(torontoBounds);  // Limit the map to Toronto
 
             var markers = L.markerClusterGroup({
                 disableClusteringAtZoom: 15,
