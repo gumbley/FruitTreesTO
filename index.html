@@ -111,11 +111,34 @@
             // Add fullscreen control
             L.control.fullscreen().addTo(mymap);
 
-            // Add locate control
+            // Add locate control with error handling
             L.control.locate({
                 flyTo: true,
                 keepCurrentZoomLevel: true,
+                strings: {
+                    title: "Show me where I am",
+                    popup: "Your location",
+                    outsideMapBoundsMsg: "You seem located outside the boundaries of Toronto",
+                    metersUnit: "meters",
+                    feetUnit: "feet",
+                    popup: "You are within {distance} {unit} from this point"
+                },
+                locateOptions: {
+                    maxZoom: 16,
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
             }).addTo(mymap);
+
+            // Handle location errors
+            mymap.on('locationerror', function (e) {
+                if (e.code === 1) {
+                    alert("Geolocation error: User denied Geolocation. Please enable location services in your device settings and browser settings.");
+                } else {
+                    alert("Geolocation error: " + e.message);
+                }
+            });
 
             // Define bounding box coordinates for Toronto
             const TORONTO_BOUNDS = [
