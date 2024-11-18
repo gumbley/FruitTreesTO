@@ -40,6 +40,11 @@ def process_csv_to_json(csv_file_path, json_file_path):
             
             fruiting_start, fruiting_end = FRUIT_TREE_LIST[tree_name]
 
+            # Split COMMON_NAME into name and sub_name
+            name_parts = tree_name.split(',', 1)
+            name = name_parts[0].strip()  # Everything before the comma
+            sub_name = name_parts[1].strip() if len(name_parts) > 1 else ""  # Everything after the comma
+
             # Parse geometry as JSON and extract coordinates
             geometry = json.loads(row['geometry'])
             longitude, latitude = geometry['coordinates'][0]
@@ -49,7 +54,8 @@ def process_csv_to_json(csv_file_path, json_file_path):
 
             tree = {
                 "city_id": row.get("STRUCTID", "").strip(),
-                "name": tree_name,
+                "name": name,
+                "sub_name": sub_name,
                 "latitude": latitude,
                 "longitude": longitude,
                 "address": address,

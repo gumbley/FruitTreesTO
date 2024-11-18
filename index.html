@@ -235,8 +235,8 @@
                                 (name === 'all' || name === 'inSeason' && dayOfYear >= tree.fruiting_start_day && dayOfYear <= tree.fruiting_end_day || tree.name === name)
                             ) {
                                 var popupContent = `
-                                    <strong>${tree.name} ${tree.sub_name}</strong><br>
-                                    Address: ${tree.address}
+                                    <strong>${tree.name}${tree.sub_name ? ', ' + tree.sub_name : ''}</strong><br>
+                                    ${tree.address}
                                 `;
                                 var markerColor = getColorForTreeType(tree.name);
                                 var marker = L.circleMarker([tree.latitude, tree.longitude], {
