@@ -129,23 +129,27 @@
             // Add fullscreen control
             L.control.fullscreen().addTo(mymap);
 
-            // Add locate control with error handling
+            // Add locate control optimized for walking navigation
             L.control.locate({
                 flyTo: true,
                 keepCurrentZoomLevel: true,
+                drawCircle: true,
+                showPopup: false,
+                watch: true,
+                setView: 'once',
                 strings: {
-                    title: "Show me where I am",
+                    title: "Track my location while walking",
                     popup: "Your location",
                     outsideMapBoundsMsg: "You seem located outside the boundaries of Toronto",
                     metersUnit: "meters",
-                    feetUnit: "feet",
-                    popup: "You are within {distance} {unit} from this point"
+                    feetUnit: "feet"
                 },
                 locateOptions: {
                     maxZoom: 16,
                     enableHighAccuracy: true,
                     timeout: 30000,
-                    maximumAge: 300000
+                    maximumAge: 10000,
+                    watch: true
                 }
             }).addTo(mymap);
 
