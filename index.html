@@ -144,18 +144,51 @@
                 locateOptions: {
                     maxZoom: 16,
                     enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
+                    timeout: 30000,
+                    maximumAge: 300000
                 }
             }).addTo(mymap);
 
-            // Handle location errors
-            mymap.on('locationerror', function (e) {
-                if (e.code === 1) {
-                    alert("Geolocation error: User denied Geolocation. Please enable location services in your device settings and browser settings.");
-                } else {
-                    alert("Geolocation error: " + e.message);
+            // Enhanced location error handling for iOS
+            function handleLocationError(e) {
+                let message = "Location access failed. ";
+                
+                switch(e.code) {
+                    case 1:
+                        message += "Please enable location services:\n\n" +
+                                  "iOS: Settings > Privacy & Security > Location Services > Safari\n" +
+                                  "Make sure both Location Services and Safari are enabled.";
+                        break;
+                    case 2:
+                        message += "Position unavailable. Please check your internet connection and try again.";
+                        break;
+                    case 3:
+                        message += "Request timed out. Please try again - location services may take longer on mobile devices.";
+                        break;
+                    default:
+                        message += e.message || "Unknown error occurred.";
                 }
+                
+                if (!navigator.geolocation) {
+                    message = "Geolocation is not supported by this browser.";
+                } else if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                    message += "\n\nNote: Location services require a secure connection (HTTPS).";
+                }
+                
+                alert(message);
+            }
+
+            // Check for HTTPS and show warning if needed
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                console.warn('Location services work best with HTTPS. Consider enabling HTTPS for better iOS compatibility.');
+            }
+
+            // Handle location errors
+            mymap.on('locationerror', handleLocationError);
+            
+            // Add success feedback
+            mymap.on('locationfound', function(e) {
+                console.log('Location found:', e.latlng);
             });
 
             // Define bounding box coordinates for Toronto
