@@ -22,8 +22,6 @@
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.5/Control.FullScreen.css" />
 
-    <!-- Leaflet Locate Control CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
 
     <!-- FontAwesome CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -41,8 +39,6 @@
     <!-- Leaflet Fullscreen Plugin JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.5/Control.FullScreen.js" defer></script>
 
-    <!-- Leaflet Locate Control JS -->
-    <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js" defer></script>
 
     <style>
         #searchForm {
@@ -62,6 +58,12 @@
 
         #dateDisplay {
             margin-left: 10px;
+        }
+
+        /* Active state for location button */
+        .leaflet-control-locate-button.active {
+            background: #007cff !important;
+            color: white !important;
         }
     </style>
 </head>
@@ -129,29 +131,156 @@
             // Add fullscreen control
             L.control.fullscreen().addTo(mymap);
 
-            // Add locate control optimized for walking navigation
-            L.control.locate({
-                flyTo: true,
-                keepCurrentZoomLevel: true,
-                drawCircle: true,
-                showPopup: false,
-                watch: true,
-                setView: 'once',
-                strings: {
-                    title: "Track my location while walking",
-                    popup: "Your location",
-                    outsideMapBoundsMsg: "You seem located outside the boundaries of Toronto",
-                    metersUnit: "meters",
-                    feetUnit: "feet"
-                },
-                locateOptions: {
-                    maxZoom: 16,
-                    enableHighAccuracy: true,
-                    timeout: 30000,
-                    maximumAge: 10000,
-                    watch: true
+            // Custom location tracking without motion/orientation permissions
+            let locationMarker = null;
+            let locationCircle = null;
+            let watchId = null;
+            let isTracking = false;
+
+            // Create proper Leaflet control for location tracking
+            const LocationControl = L.Control.extend({
+                onAdd: function(map) {
+                    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-locate');
+                    
+                    const button = L.DomUtil.create('a', 'leaflet-control-locate-button', container);
+                    button.innerHTML = '<i class="fas fa-location-arrow" aria-hidden="true"></i>';
+                    button.href = '#';
+                    button.title = 'Track my location';
+                    button.setAttribute('role', 'button');
+                    button.setAttribute('aria-label', 'Track my location');
+                    
+                    L.DomEvent.on(button, 'click', L.DomEvent.stopPropagation)
+                              .on(button, 'click', L.DomEvent.preventDefault)
+                              .on(button, 'click', toggleLocationTracking, this);
+                    
+                    return container;
                 }
-            }).addTo(mymap);
+            });
+
+            // Add the control to the map
+            new LocationControl({ position: 'topleft' }).addTo(mymap);
+
+            function toggleLocationTracking() {
+                if (!navigator.geolocation) {
+                    alert('Geolocation is not supported by this browser.');
+                    return;
+                }
+
+                if (isTracking) {
+                    stopLocationTracking();
+                } else {
+                    startLocationTracking();
+                }
+            }
+
+            function startLocationTracking() {
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 60000,
+                    maximumAge: 5000
+                };
+
+                // Get initial position
+                navigator.geolocation.getCurrentPosition(
+                    onLocationSuccess,
+                    onLocationError,
+                    options
+                );
+
+                // Start watching position
+                watchId = navigator.geolocation.watchPosition(
+                    onLocationSuccess,
+                    onLocationError,
+                    options
+                );
+
+                isTracking = true;
+                const locationBtn = document.querySelector('.leaflet-control-locate-button');
+                if (locationBtn) {
+                    locationBtn.classList.add('active');
+                    locationBtn.title = 'Stop tracking location';
+                }
+            }
+
+            function stopLocationTracking() {
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
+
+                if (locationMarker) {
+                    mymap.removeLayer(locationMarker);
+                    locationMarker = null;
+                }
+
+                if (locationCircle) {
+                    mymap.removeLayer(locationCircle);
+                    locationCircle = null;
+                }
+
+                isTracking = false;
+                const locationBtn = document.querySelector('.leaflet-control-locate-button');
+                if (locationBtn) {
+                    locationBtn.classList.remove('active');
+                    locationBtn.title = 'Track my location';
+                }
+            }
+
+            function onLocationSuccess(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                // Remove existing markers
+                if (locationMarker) {
+                    mymap.removeLayer(locationMarker);
+                }
+                if (locationCircle) {
+                    mymap.removeLayer(locationCircle);
+                }
+
+                // Add new location marker
+                locationMarker = L.marker([lat, lng])
+                    .addTo(mymap)
+                    .bindPopup(`Your location (±${Math.round(accuracy)}m accuracy)`);
+
+                // Only show accuracy circle if accuracy is reasonable (< 100m)
+                if (accuracy < 100) {
+                    locationCircle = L.circle([lat, lng], {
+                        radius: accuracy,
+                        color: '#007cff',
+                        fillColor: '#007cff',
+                        fillOpacity: 0.1,
+                        weight: 2
+                    }).addTo(mymap);
+                } else {
+                    // Show small indicator circle for poor accuracy
+                    locationCircle = L.circle([lat, lng], {
+                        radius: 10,
+                        color: '#ff6b6b',
+                        fillColor: '#ff6b6b',
+                        fillOpacity: 0.3,
+                        weight: 2
+                    }).addTo(mymap);
+                    
+                    // Show accuracy warning
+                    if (accuracy > 500) {
+                        locationMarker.bindPopup(`Your location (±${Math.round(accuracy)}m accuracy) - Poor GPS signal. Try moving to open area.`);
+                    }
+                }
+
+                // Center map on first location fix
+                if (!mymap.getBounds().contains([lat, lng])) {
+                    mymap.setView([lat, lng], 18);
+                }
+
+                console.log('Location found:', lat, lng, 'Accuracy:', accuracy + 'm');
+            }
+
+            function onLocationError(error) {
+                handleLocationError(error);
+                stopLocationTracking();
+            }
 
             // Enhanced location error handling for iOS
             function handleLocationError(e) {
@@ -187,13 +316,6 @@
                 console.warn('Location services work best with HTTPS. Consider enabling HTTPS for better iOS compatibility.');
             }
 
-            // Handle location errors
-            mymap.on('locationerror', handleLocationError);
-            
-            // Add success feedback
-            mymap.on('locationfound', function(e) {
-                console.log('Location found:', e.latlng);
-            });
 
             // Define bounding box coordinates for Toronto
             const TORONTO_BOUNDS = [
