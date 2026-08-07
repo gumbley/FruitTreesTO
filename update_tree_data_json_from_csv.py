@@ -69,7 +69,16 @@ def process_csv_to_json(csv_file_path, json_file_path):
         json.dump(trees, jsonfile, indent=4, ensure_ascii=False)
 
 if __name__ == "__main__":
-    # Example usage
-    input_csv = r"C:\Users\...\StreetTreeData2024_11_15.csv"  # Replace with the actual CSV file path
-    output_json = "tree_data.json"  # Replace with the desired JSON file path
+    import sys
+
+    # Accept command-line arguments or use defaults
+    if len(sys.argv) >= 3:
+        input_csv = sys.argv[1]
+        output_json = sys.argv[2]
+    else:
+        # Fallback to default paths if no arguments provided
+        input_csv = r"C:\Users\...\StreetTreeData2024_11_15.csv"  # Replace with the actual CSV file path
+        output_json = "tree_data.json"  # Replace with the desired JSON file path
+
     process_csv_to_json(input_csv, output_json)
+    print(f"Successfully processed {input_csv} to {output_json}")
